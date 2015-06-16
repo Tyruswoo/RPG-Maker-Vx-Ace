@@ -1,0 +1,133 @@
+#==============================================================================
+# Output Event List
+# by Tyruswoo
+# 15 June 2015
+#------------------------------------------------------------------------------
+# Terms:
+#  * Free to use in non-commercial or commercial projects, as long as you
+#    credit me, Tyruswoo, in your game's credits.
+#  * Please also credit Galv.
+#  * It would be awesome to see how you use the script!  If you use it,
+#    please send me a copy of your game.  Thanks!
+#------------------------------------------------------------------------------
+# Includes:
+# Access Event Name, by Galv, 12 Nov. 2012
+# Monitor Map Setup, by Tyruswoo, 15 June 2015
+#------------------------------------------------------------------------------
+# Output Event List features:
+#  * This script sends output to the Console Window, allowing tracking of the
+#    Game_Interpreter's list of commands for the event currently running.
+#    This allows the developer to see each of the event's commands as they
+#    occur, using the console window.  This is useful for debugging purposes,
+#    and to keep track of what is occuring in the background in your game.
+#==============================================================================
+
+#==============================================================================
+# Monitor Map Setup
+# by Tyruswoo, 15 June 2015
+#==============================================================================
+class Game_Map
+  #--------------------------------------------------------------------------
+  # * Object Initialization - Alias Method
+  #--------------------------------------------------------------------------
+  alias setup_notify setup
+  def setup(map_id)
+    setup_notify(map_id)
+    map_name = $data_mapinfos[$game_map.map_id].name
+    print "\n\n  Map #{map_id}: #{map_name}"
+  end
+end #Game_Map
+
+#==============================================================================
+# Galv's code to access event name, as posted to forum, 12 Nov. 2012:
+# http://www.rpgmakervxace.net/topic/8346-change-event-name/
+#==============================================================================
+class Game_Event  #This code by Galv
+  attr_accessor :name
+  alias galv_event_name_initialize_name initialize
+  def initialize(map_id, event)
+    galv_event_name_initialize_name(map_id, event)
+    @name = event.name
+  end
+end #class Game_Event
+
+#==============================================================================
+# Output Event List
+# by Tyruswoo, 15 June 2015
+#==============================================================================
+class Game_Interpreter
+  
+  #--------------------------------------------------------------------------
+  # * Execute
+  #--------------------------------------------------------------------------
+  alias run_tw run
+  def run
+    if event_id < 10
+      print "\n      Event 00#{event_id}: #{$game_map.events[event_id].name}"
+    elsif event_id < 100
+      print "\n      Event 0#{event_id}: #{$game_map.events[event_id].name}"
+    else
+      print "\n      Event #{event_id}: #{$game_map.events[event_id].name}"
+    end
+    run_tw
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Execute Command
+  #--------------------------------------------------------------------------
+  alias execute_command_tw execute_command
+  def execute_command
+    if respond_to?("command_#{@list[@index].code}")
+      if @index < 10
+        print "\n              #{@index}: command_#{@list[@index].code}"
+      elsif @index < 100
+        print "\n             #{@index}: command_#{@list[@index].code}"
+      elsif @index < 1000
+        print "\n            #{@index}: command_#{@list[@index].code}"
+      else
+        print "\n           #{@index}: command_#{@list[@index].code}"
+      end
+    end
+    execute_command_tw
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Transfer Player
+  #--------------------------------------------------------------------------
+  alias command_201_tw command_201
+  def command_201
+    print ": Transfer Player"
+    if @params[0] == 0
+      print "\n\t\t Direct Transfer to:"
+      print "\n\t\t   Map #{@params[1]}"
+      print ": #{$data_mapinfos[$game_map.map_id].name}"
+      print "\n\t\t   x: #{@params[2]}"
+      print "\n\t\t   y: #{@params[3]}"
+    else
+      print "\n\t\t Transfer designated with Variables:"
+      print "\n\t\t   Map: Variable #{@params[1]}"
+      print " = #{$game_variables[@params[1]]}"
+      print ": #{$data_mapinfos[$game_map.map_id].name}"
+      print "\n\t\t   x: Variable #{@params[2]}"
+      print " = #{$game_variables[@params[2]]}:"
+      print "\n\t\t   y: Variable #{@params[3]}"
+      print " = #{$game_variables[@params[3]]}"
+    end
+    print "\n\t\t Direction: #{@params[4]}"
+    case @params[4]
+    when 0 then print ": Retain"
+    when 2 then print ": Down"
+    when 4 then print ": Left"
+    when 6 then print ": Right"
+    when 8 then print ": Up"
+    end
+    print "\n\t\t Fade Type: #{@params[5]}"
+    case @params[5]
+    when 0 then print ": Normal"
+    when 1 then print ": White"
+    when 2 then print ": None"
+    end
+    command_201_tw
+  end
+  
+end #class Game_Interpreter
